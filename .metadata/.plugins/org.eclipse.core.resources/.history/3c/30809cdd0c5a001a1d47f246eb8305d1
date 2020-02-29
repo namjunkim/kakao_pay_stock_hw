@@ -1,0 +1,82 @@
+package com.kakao.hw;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.kakao.hw.dto.BranchInfo;
+import com.kakao.hw.dto.BusinessHistoryDTO;
+import com.kakao.hw.dto.ResponseCode;
+import com.kakao.hw.service.TransactionServiceImpl;
+
+@Controller
+public class HelloController {
+	// ctrl+shift+o
+	@RequestMapping("/")
+	public void hello (HttpServletResponse response) throws IOException {
+		response.getWriter().print("Hello World!!");
+	}
+	
+	@Autowired
+	private TransactionServiceImpl read;
+	
+	@RequestMapping("/test")
+	public void testH (HttpServletResponse response) throws IOException {
+
+		for(Map.Entry<String /*year*/, BusinessHistoryDTO> entry : read.getCustomerHighSumAmountByYear().entrySet()) {
+			
+			response.getWriter().println("year : " + entry.getKey());
+			response.getWriter().println("계좌명 : " + entry.getValue().getAcctName());
+			response.getWriter().println("계좌번호 : " + entry.getValue().getAcctNo());
+			response.getWriter().println("sumAmt : " + entry.getValue().getAmount());
+		}
+
+	}
+	
+	@RequestMapping("/test2")
+	public void testH2 (HttpServletResponse response) throws IOException {
+
+		Map<String /*year*/, List<BusinessHistoryDTO>> result = read.getNonTransationCustomerByYear();
+		
+
+	}
+	
+	@RequestMapping("/test3")
+	public void testH3 (HttpServletResponse response) throws IOException {
+
+		read.getSumAmountByBranchByYear();
+		
+
+	}
+	
+	@RequestMapping("/test4")
+	@ResponseBody
+	public Object testH4 (@RequestParam(required = false) String brName) {
+		ResponseCode responseCode = new ResponseCode();
+		
+		for(BranchInfo branchInfo :  BranchInfo.values()) {
+			if(branchInfo.isEnable()) {
+				return read.getSumAmountByBrName(brName);	
+			}
+			else {
+				responseCode.setCode("404");
+				responseCode.setMessage("br code not found error");
+				return responseCode;
+			}
+		}
+		
+		responseCode.setCode("404");
+		responseCode.setMessage("br code not found error");
+		return responseCode;
+
+
+	}
+}

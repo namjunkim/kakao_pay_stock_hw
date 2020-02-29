@@ -1,0 +1,67 @@
+package com.kakao.hw.dto;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+@Data
+@Getter
+@Setter
+public class BusinessHistoryDTO extends BranchAccountInfo {
+
+	// 거래일자
+	private String transactionDay;
+	
+	// 거래번호
+	private Long transactionNo;
+	
+	// 금액
+	private Long amount;
+	
+	// 수수료
+	private Long fee;
+	
+	// 취소여부
+	private String cancellation;
+
+	public String getTransactionDay() {
+		return transactionDay;
+	}
+
+	public void setTransactionDay(String transactionDay) {
+		this.transactionDay = transactionDay;
+	}
+
+	public Long getTransactionNo() {
+		return transactionNo;
+	}
+
+	public void setTransactionNo(Long transactionNo) {
+		this.transactionNo = transactionNo;
+	}
+
+	public Long getAmount() {
+		return amount;
+	}
+
+	public void setAmount(Long amount) {
+		this.amount = amount;
+	}
+
+	public Long getFee() {
+		return fee;
+	}
+
+	public void setFee(Long fee) {
+		this.fee = fee;
+	}
+
+	public String getCancellation() {
+		return cancellation;
+	}
+
+	public void setCancellation(String cancellation) {
+		this.cancellation = cancellation;
+	}
+	
+}

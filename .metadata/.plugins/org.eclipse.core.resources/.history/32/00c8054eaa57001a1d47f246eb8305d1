@@ -1,0 +1,30 @@
+package com.kakao.hw.dto;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+@Data
+@Getter
+@Setter
+public class BusinessHistoryDTO {
+
+	// 거래일자
+	private String transactionDay;
+	
+	// 계좌번호
+	private String acctNo;
+	
+	// 거래번호
+	private Long transactionNo;
+	
+	// 금액
+	private Long amount;
+	
+	// 수수료
+	private Long fee;
+	
+	// 취소여부
+	private String cancellation;
+	
+}

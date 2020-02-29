@@ -1,0 +1,85 @@
+package com.kakao.hw.service;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import com.google.common.collect.Lists;
+import com.kakao.hw.dto.AmountSumByBranch;
+import com.kakao.hw.dto.BusinessHistoryDTO;
+import com.kakao.hw.dto.NoneTransctionCustomerDTO;
+
+@RunWith(MockitoJUnitRunner.Silent.class)
+public class TransactionServiceTest {
+
+	@InjectMocks
+	private TransactionServiceImpl transactionService;
+
+	@Mock
+	private ReadCSVServiceImpl readCSVService;
+	
+
+	@Before
+	public void setup() {
+
+	}
+
+//	@Test
+//	public void getCustomerHighSumAmountByYearTEST() throws Exception {
+//		List<List<String>> transactionHistoryList = Lists.newArrayList();
+//		List<Map.Entry<String/*customer*/, Long /*sumOfAmount*/>> mapList = new LinkedList<>();
+////		List<String> testList = Lists.newArrayList();
+////		testList.add("111111");
+////		testList.add("에이스");
+////		testList.add("A");
+////		
+////		transactionHistoryList.add(testList);
+//		
+//		when(readCSVService.readCSVFileFromLocal("path", 1)).thenReturn(transactionHistoryList);
+//		when(Collections.sort( mapList)).thenReturn(new LinkedList<>());
+//		transactionService.getCustomerHighSumAmountByYear();
+////		assertEquals(Long.valueOf(test).longValue(), 1L);
+//		
+//	}
+//	
+//	private void dddd() {
+//        Collections.sort(mapList, new Comparator<Map.Entry<String, Long>>() {
+//            @Override
+//            public int compare(Map.Entry<String, Long> o1, Map.Entry<String, Long> o2) {
+//            	Long comparision = (o1.getValue() - o2.getValue()) * -1;
+//                return (int) (comparision == 0 ? o1.getKey().compareTo(o2.getKey()) : comparision);
+//            }
+//        });
+//        
+//	}
+	@Test
+	public void getNonTransationCustomerByYearTEST() {
+		List<List<String>> transactionHistoryList = Lists.newArrayList();
+		when(readCSVService.readCSVFileFromLocal("path", 1)).thenReturn(transactionHistoryList);
+		
+		List<NoneTransctionCustomerDTO> noneTransctionCustomerDTOList = transactionService.getNonTransationCustomerByYear();
+		noneTransctionCustomerDTOList.get(0).getAcctNo();
+	}
+	
+	@Test
+	public void getSumAmountByBrNameTEST() {
+		List<List<String>> transactionHistoryList = Lists.newArrayList();
+		List<String> transactionHistory = Lists.newArrayList();
+		transactionHistory.add("11111119");
+		transactionHistory.add("주디");
+		transactionHistory.add("D");
+		when(readCSVService.readCSVFileFromLocal("path", 1)).thenReturn(transactionHistoryList);
+		List<BusinessHistoryDTO> a = transactionService.mappingToDtoTransactionHistory();
+		AmountSumByBranch amountSumByBranch = transactionService.getSumAmountByBrName("잠실점");
+		assertEquals("잠실점", amountSumByBranch.getBrName());
+	}
+	
+}

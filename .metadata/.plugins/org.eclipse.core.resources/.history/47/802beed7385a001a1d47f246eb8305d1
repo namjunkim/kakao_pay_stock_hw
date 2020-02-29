@@ -1,0 +1,33 @@
+package com.kakao.hw.service;
+
+import org.junit.Before;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+@RunWith(MockitoJUnitRunner.class)
+public class TransactionServiceTest {
+
+	@InjectMocks
+	private TransactionServiceImpl transactionService;
+
+	@Mock
+	private ReadCSVService readCSVService;
+
+	@Before
+	public void setup() {
+
+	}
+
+	@Test
+	public void getCustomerHighSumAmountByYearTEST() {
+		
+		
+		
+		transactionService.getCustomerHighSumAmountByYear();
+		
+	}
+	
+}

@@ -1,0 +1,30 @@
+package com.kakao.hw;
+
+import java.io.IOException;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.kakao.hw.dto.BusinessHistoryDTO;
+import com.kakao.hw.service.TransactionServiceImpl;
+
+@Controller
+public class HelloController {
+	// ctrl+shift+o
+	@RequestMapping("/")
+	public void hello (HttpServletResponse response) throws IOException {
+		response.getWriter().print("Hello World!!");
+	}
+	
+	@Autowired
+	private TransactionServiceImpl read;
+	
+	@RequestMapping("/test")
+	public Map<String /*year*/, BusinessHistoryDTO> testH (HttpServletResponse response) throws IOException {
+		return read.getCustomerHighSumAmountByYear();
+	}
+}

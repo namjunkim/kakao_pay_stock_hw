@@ -1,0 +1,473 @@
+package com.kakao.hw.service;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.kakao.hw.dto.AmountSumByBranch;
+import com.kakao.hw.dto.AmountSumByBranchByYear;
+import com.kakao.hw.dto.AmountSumByBranchByYearData;
+import com.kakao.hw.dto.BranchAccountInfo;
+import com.kakao.hw.dto.BranchInfoDTO;
+import com.kakao.hw.dto.BusinessHistoryDTO;
+import com.kakao.hw.dto.NoneTransctionCustomerDTO;
+
+@Service
+public class TransactionServiceImpl implements TransactionService{
+
+	//branchInfo.csv
+	//관리점코드	관리점명
+	
+	//accountInfo.csv
+	//계좌번호	계좌명	관리점코드
+	
+	//transactionHistory.csv
+	//거래일자	계좌번호	거래번호	금액	수수료	취소여부
+
+	// TO DO classpath 로 바뀌야함
+	// /Users/namjunkim/Documents/workplace/kakak-hw/data
+	final static String classPath = "/Users/namjunkim/Documents/workplace/kakak-hw/data"; 
+	
+	@Autowired
+	private ReadCSVService readCSVService;
+	
+	public List<BusinessHistoryDTO> mappingToDtoTransactionHistory() {
+		
+		List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+		Resource resource = new ClassPathResource("transactionHistory.csv");
+		List<List<String>> transactionHistoryList = Lists.newArrayList();
+		try {
+			transactionHistoryList = 
+				readCSVService.readCSVFileFromLocal(resource.getURI().getPath(), 1);
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+		for(List<String> transactionHistory : transactionHistoryList) {
+			BusinessHistoryDTO businessHistoryDTO = new BusinessHistoryDTO();
+			businessHistoryDTO.setTransactionDay(transactionHistory.get(0));
+			businessHistoryDTO.setAcctNo(transactionHistory.get(1));
+			businessHistoryDTO.setTransactionNo(Long.valueOf(transactionHistory.get(2)));
+			businessHistoryDTO.setAmount(Long.valueOf(transactionHistory.get(3)));
+			businessHistoryDTO.setFee(Long.valueOf(transactionHistory.get(4)));
+			businessHistoryDTO.setCancellation(transactionHistory.get(5));
+
+			businessHistoryDTOList.add(businessHistoryDTO);
+		}
+		
+		return businessHistoryDTOList;
+	}
+	
+	public List<BranchAccountInfo> mappingToDtoBrachAccountInfo() {
+		
+		List<BranchAccountInfo> branchAccountInfoListResult = Lists.newArrayList();
+		Resource resource = new ClassPathResource("accountInfo.csv");
+		List<List<String>> branchAccountInfoLists = Lists.newArrayList();
+		try {
+			branchAccountInfoLists = 
+				readCSVService.readCSVFileFromLocal(resource.getURI().getPath(), 1);
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		for(List<String> branchAccountInfoList : branchAccountInfoLists) {
+			BranchAccountInfo branchAccountInfo = new BranchAccountInfo();
+			branchAccountInfo.setAcctNo(branchAccountInfoList.get(0));
+			branchAccountInfo.setAcctName(branchAccountInfoList.get(1));
+			branchAccountInfo.setBrCode(branchAccountInfoList.get(2));
+
+			branchAccountInfoListResult.add(branchAccountInfo);
+		}
+		
+		return branchAccountInfoListResult;
+	}
+	
+	public List<BranchInfoDTO> mappingToDtoBranchInfoDTO() {
+		
+		List<BranchInfoDTO> branchInfoDTOListResult = Lists.newArrayList();
+		Resource resource = new ClassPathResource("branchInfo.csv");
+		List<List<String>> branchInfoDTOLists = Lists.newArrayList();
+		try {
+			branchInfoDTOLists = readCSVService.readCSVFileFromLocal(resource.getURI().getPath(), 1);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for(List<String> branchInfoDTOList : branchInfoDTOLists) {
+			BranchInfoDTO branchInfoDTO = new BranchInfoDTO();
+			branchInfoDTO.setBrCode(branchInfoDTOList.get(0));
+			branchInfoDTO.setBrName(branchInfoDTOList.get(1));
+
+			branchInfoDTOListResult.add(branchInfoDTO);
+		}
+		
+		return branchInfoDTOListResult;
+	}
+	
+	public BusinessHistoryDTO mappingBranchAccountInfoListIntoBusinessHistoryDTO(
+			List<BranchAccountInfo> branchAccountInfoList, BusinessHistoryDTO businessHistoryDTO) {
+		
+		for(BranchAccountInfo branchAccountInfo : branchAccountInfoList) {
+			if(branchAccountInfo.getAcctNo().equals(businessHistoryDTO.getAcctNo())
+//				&& branchAccountInfo.getAcctName().equals(businessHistoryDTO.getAcctName())
+			) {
+				businessHistoryDTO.setAcctName(branchAccountInfo.getAcctName());
+				businessHistoryDTO.setAcctNo(branchAccountInfo.getAcctNo());
+				businessHistoryDTO.setBrCode(branchAccountInfo.getBrCode());
+			}
+		}
+		
+		return businessHistoryDTO;
+	}
+
+	public BusinessHistoryDTO mappingBranchInfoDTOListIntoBusinessHistoryDTO(
+			List<BranchInfoDTO> branchInfoDTOList, BusinessHistoryDTO businessHistoryDTO) {
+		
+		for(BranchInfoDTO branchInfoDTO : branchInfoDTOList) {
+			if(branchInfoDTO.getBrCode().equals(businessHistoryDTO.getBrCode()))
+			{
+				businessHistoryDTO.setBrName(branchInfoDTO.getBrName());
+				break;
+			}
+		}
+		
+		return businessHistoryDTO;
+	}
+	
+	public Map<String /*year*/, List<BusinessHistoryDTO>> divideBusinessHistoryDTOListByYear (List<BusinessHistoryDTO> businessHistoryDTOList) {
+		
+		Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryMapByYear = Maps.newHashMap();
+		
+		String prefixYear = "";
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOList) {
+			prefixYear = businessHistoryDTO.getTransactionDay().substring(0, 4);
+			if(businessHistoryMapByYear.get(prefixYear) == null) {
+				List<BusinessHistoryDTO> newYearBusinessHistoryDTOList = Lists.newArrayList();
+				newYearBusinessHistoryDTOList.add(businessHistoryDTO);
+				businessHistoryMapByYear.put(prefixYear, newYearBusinessHistoryDTOList);
+			} else {
+				businessHistoryMapByYear.get(prefixYear).add(businessHistoryDTO);
+			}
+		}
+		
+		return businessHistoryMapByYear;
+	}
+	
+	public Map<String /*year*/, Map<String/*customer*/, Long /*sumOfAmount*/>> 
+			divideBusinessHistoryByYearMapListByCustomer (Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYearMap) {
+
+		Map<String /*year*/, Map<String/*customer*/, Long /*sumOfAmount*/>> customerSumByYearMap = Maps.newHashMap();
+		
+		
+		for(Map.Entry<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYear : businessHistoryByYearMap.entrySet()) {
+			Map<String/*customer*/, Long /*sumOfAmount*/> customerSumMap = Maps.newHashMap();
+//			customerSumByYearMap.put(businessHistoryByYear.getKey(), null);
+			
+			for(BusinessHistoryDTO businessHistoryDTO : businessHistoryByYear.getValue()) {
+				Long sumOfAmount = customerSumMap.get(businessHistoryDTO.getAcctNo());
+				if(sumOfAmount == null) { sumOfAmount = 0L; }
+				if(businessHistoryDTO.getCancellation().equals("N")) {
+					customerSumMap.put(businessHistoryDTO.getAcctNo(), sumOfAmount + businessHistoryDTO.getAmount() - businessHistoryDTO.getFee());
+				}
+			}
+			customerSumByYearMap.put(businessHistoryByYear.getKey(), customerSumMap);
+		}
+		
+		return customerSumByYearMap;
+	}
+	
+	// 아예 없는분
+	public Map<String/*year*/, Map<String /*name*/, BranchAccountInfo>> noneTransction(Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYearMap, List<BranchAccountInfo> branchAccountInfoList) {
+		Map<String/*year*/, Map<String /*name*/, BranchAccountInfo>> result = Maps.newHashMap();
+		
+		for(Map.Entry<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYear : businessHistoryByYearMap.entrySet()) {
+			Map<String /*name*/, BranchAccountInfo> businessHistoryByName = Maps.newHashMap();
+			
+			for(BranchAccountInfo branchAccountInfo : branchAccountInfoList) {
+				if(businessHistoryByYear.getValue().stream().noneMatch(businessHistory -> businessHistory.getAcctNo().equals(branchAccountInfo.getAcctNo()))) {
+					businessHistoryByName.put(branchAccountInfo.getAcctName(), branchAccountInfo);
+				}
+			}
+			
+			result.put(businessHistoryByYear.getKey(), businessHistoryByName);
+		}
+		
+		return result;
+	}
+	
+	// 취소분
+	public Map<String/*year*/, Map<String /*name*/, List<BusinessHistoryDTO>>> getOnlyCancellation (Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYearMap) {
+		
+		Map<String/*year*/, Map<String /*name*/, List<BusinessHistoryDTO>>> result = Maps.newHashMap(); 
+		
+		for(Map.Entry<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYear : businessHistoryByYearMap.entrySet()) {
+			Map<String /*name*/, List<BusinessHistoryDTO>> businessHistoryByName = Maps.newHashMap();
+			//연도별 byName 
+			for(BusinessHistoryDTO businessHistoryDTO : businessHistoryByYear.getValue()) {
+				if(businessHistoryByName.get(businessHistoryDTO.getAcctName()) == null) {
+					List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+					businessHistoryDTOList.add(businessHistoryDTO);
+					businessHistoryByName.put(businessHistoryDTO.getAcctName(), businessHistoryDTOList);
+				} else {
+					businessHistoryByName.get(businessHistoryDTO.getAcctName()).add(businessHistoryDTO);
+				}
+			}
+			
+			Map<String /*name*/, List<BusinessHistoryDTO>> onlyCancelMap = Maps.newHashMap();
+			for(Map.Entry<String/*name*/, List<BusinessHistoryDTO>> entry : businessHistoryByName.entrySet()) {
+				if(entry.getValue().stream().noneMatch(businessHistory ->  businessHistory.getCancellation().equals("N"))) {
+					onlyCancelMap.put(entry.getKey(), entry.getValue());
+				}
+			}
+			
+			result.put(businessHistoryByYear.getKey(), onlyCancelMap);
+			
+		}
+		
+		return result;
+	}
+
+	public Map<String /*brName*/, List<BusinessHistoryDTO>> divideBusinessHistoryDTOListByBrName (List<BusinessHistoryDTO> businessHistoryDTOList) {
+		
+		Map<String /*brName*/, List<BusinessHistoryDTO>> businessHistoryMapByBrName = Maps.newHashMap();
+		
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOList) {
+			if(businessHistoryMapByBrName.get(businessHistoryDTO.getBrName()) == null) {
+				List<BusinessHistoryDTO> newYearBusinessHistoryDTOList = Lists.newArrayList();
+				newYearBusinessHistoryDTOList.add(businessHistoryDTO);
+				businessHistoryMapByBrName.put(businessHistoryDTO.getBrName(), newYearBusinessHistoryDTOList);
+			} else {
+				businessHistoryMapByBrName.get(businessHistoryDTO.getBrName()).add(businessHistoryDTO);
+			}
+		}
+		
+		return businessHistoryMapByBrName;
+	}
+	
+	public List<AmountSumByBranchByYear> getAmountSumByBranchByYear (Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryDTOByYear) {
+		
+		List<AmountSumByBranchByYear> amountSumByBranchByYearList = Lists.newArrayList();
+	
+		for(Map.Entry<String /*year*/, List<BusinessHistoryDTO>> entry : businessHistoryDTOByYear.entrySet()) {
+			Map<String/*brName*/, List<BusinessHistoryDTO>> brNameBusinessHistoryMap = divideBusinessHistoryDTOListByBrName(entry.getValue());
+			
+			AmountSumByBranchByYear amountSumByBranchByYear = new AmountSumByBranchByYear();
+			List<AmountSumByBranchByYearData> amountSumByBranchByYearDataList = Lists.newArrayList();
+			
+			for(Map.Entry<String/*brName*/, List<BusinessHistoryDTO>> businessHistoryDTOByBrName : brNameBusinessHistoryMap.entrySet()) {
+				Long amountSum = 0L;
+				
+				AmountSumByBranchByYearData amountSumByBranchByYearData = new AmountSumByBranchByYearData();
+				
+				for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOByBrName.getValue()) {
+					if(businessHistoryDTO.getCancellation().endsWith("N")) {
+						amountSum = amountSum + businessHistoryDTO.getAmount();
+					}
+				}
+				amountSumByBranchByYearData.setSumAmt(amountSum);
+				amountSumByBranchByYearData.setBrName(businessHistoryDTOByBrName.getValue().get(0).getBrName());
+				amountSumByBranchByYearData.setBrCode(businessHistoryDTOByBrName.getValue().get(0).getBrCode());
+				
+				amountSumByBranchByYearDataList.add(amountSumByBranchByYearData);
+			}
+			amountSumByBranchByYear.setAmountSumByBranchByYearDataList(amountSumByBranchByYearDataList);
+			amountSumByBranchByYear.setYear(entry.getKey());
+			amountSumByBranchByYearList.add(amountSumByBranchByYear);
+		}
+		
+		return amountSumByBranchByYearList;
+		
+	}
+	
+	// #1
+	@Override
+	public Map<String /*year*/, BusinessHistoryDTO> getCustomerHighSumAmountByYear () {
+		List<BranchAccountInfo> branchAccountInfoList = mappingToDtoBrachAccountInfo();
+		List<BusinessHistoryDTO> businessHistoryDTOs = mappingToDtoTransactionHistory();
+		List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOs) {
+			businessHistoryDTOList.add(mappingBranchAccountInfoListIntoBusinessHistoryDTO(branchAccountInfoList, businessHistoryDTO));
+		}
+		
+		// byYear
+		Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYearMap = divideBusinessHistoryDTOListByYear(businessHistoryDTOList);
+		Map<String /*year*/, Map<String/*customer*/, Long /*sumOfAmount*/>> resultByCustomer = 
+				divideBusinessHistoryByYearMapListByCustomer(businessHistoryByYearMap);
+		
+		Map<String /*year*/, Map<String/*customer*/, Long /*sumOfAmount*/>> resultDesc = Maps.newHashMap();
+		
+		for(Map.Entry<String /*year*/, Map<String/*customer*/, Long /*sumOfAmount*/>> entry : resultByCustomer.entrySet()) {
+			List<Map.Entry<String/*customer*/, Long /*sumOfAmount*/>> mapList = new LinkedList<>(entry.getValue().entrySet());
+	        Collections.sort(mapList, new Comparator<Map.Entry<String, Long>>() {
+	            @Override
+	            public int compare(Map.Entry<String, Long> o1, Map.Entry<String, Long> o2) {
+	            	Long comparision = (o1.getValue() - o2.getValue()) * -1;
+	                return (int) (comparision == 0 ? o1.getKey().compareTo(o2.getKey()) : comparision);
+	            }
+	        });
+	        
+	        Map<String/*customer*/, Long /*sumOfAmount*/> sortedMap = new LinkedHashMap<>(); 
+	        for(Iterator<Map.Entry<String, Long>> iterator = mapList.iterator(); iterator.hasNext();){
+	            Map.Entry<String, Long> sortedEntry = iterator.next();
+	            sortedMap.put(sortedEntry.getKey(), sortedEntry.getValue());
+	        }
+	        
+	        resultDesc.put(entry.getKey(), sortedMap);
+		}
+	    
+		Map<String /*year*/, BusinessHistoryDTO> finalResult = Maps.newHashMap();
+		
+		for(Map.Entry<String /*year*/, Map<String/*customer*/, Long /*sumOfAmount*/>> entry : resultDesc.entrySet()) {
+			for(Map.Entry<String/*customer*/, Long /*sumOfAmount*/> entryCustomer : entry.getValue().entrySet()) {
+				if(finalResult.get(entry.getKey()) == null) {
+					BusinessHistoryDTO businessHistoryDTO = new BusinessHistoryDTO();
+					businessHistoryDTO.setAcctNo(entryCustomer.getKey());
+					businessHistoryDTO.setAmount(entryCustomer.getValue());
+					mappingBranchAccountInfoListIntoBusinessHistoryDTO(branchAccountInfoList, businessHistoryDTO);
+					finalResult.put(entry.getKey(), businessHistoryDTO);
+				}
+			}
+		}
+		
+		return finalResult;
+	}
+	
+	// #2
+	public List<NoneTransctionCustomerDTO> getNonTransationCustomerByYear () {
+		List<BranchAccountInfo> branchAccountInfoList = mappingToDtoBrachAccountInfo();
+		List<BusinessHistoryDTO> businessHistoryDTOs = mappingToDtoTransactionHistory();
+		List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOs) {
+			businessHistoryDTOList.add(mappingBranchAccountInfoListIntoBusinessHistoryDTO(branchAccountInfoList, businessHistoryDTO));
+		}
+		
+		// byYear
+		Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryByYearMap = divideBusinessHistoryDTOListByYear(businessHistoryDTOList);
+		Map<String /*year*/, List<BusinessHistoryDTO>> finalResult = Maps.newHashMap();
+		
+		// 취소분
+		Map<String/*year*/, Map<String /*name*/, List<BusinessHistoryDTO>>> byNameByYearCancel = 
+				getOnlyCancellation(businessHistoryByYearMap);
+		// 아예 없는분
+		Map<String/*year*/, Map<String /*name*/, BranchAccountInfo>> byNameByYearNone = 
+				noneTransction(businessHistoryByYearMap, branchAccountInfoList);
+		
+		// 통합
+		for(Map.Entry<String/*year*/, Map<String /*name*/, List<BusinessHistoryDTO>>> entry : byNameByYearCancel.entrySet()) {
+			for(Map.Entry<String /*name*/, List<BusinessHistoryDTO>> entry2nd : entry.getValue().entrySet()) {
+				if(finalResult.get(entry.getKey()) == null) {
+					List<BusinessHistoryDTO> finalBusinessHistoryDTOList = Lists.newArrayList();
+					finalBusinessHistoryDTOList.add(entry2nd.getValue().get(0));
+					finalResult.put(entry.getKey(), finalBusinessHistoryDTOList);
+				} else {
+					finalResult.get(entry.getKey()).add(entry2nd.getValue().get(0));
+				}
+			}
+		}
+		
+		for(Map.Entry<String/*year*/, Map<String /*name*/, BranchAccountInfo>> entry : byNameByYearNone.entrySet()) {
+			for(Map.Entry<String /*name*/, BranchAccountInfo> entry2nd : entry.getValue().entrySet()) {
+				if(finalResult.get(entry.getKey()) == null) {
+					List<BusinessHistoryDTO> finalBusinessHistoryDTOList = Lists.newArrayList();
+					BusinessHistoryDTO finalBusinessHistoryDTO = new BusinessHistoryDTO();
+					finalBusinessHistoryDTO.setAcctName(entry2nd.getValue().getAcctName());
+					finalBusinessHistoryDTO.setAcctNo(entry2nd.getValue().getAcctNo());
+					finalBusinessHistoryDTOList.add(finalBusinessHistoryDTO);
+					finalResult.put(entry.getKey(), finalBusinessHistoryDTOList);
+				} else {
+					BusinessHistoryDTO finalBusinessHistoryDTO = new BusinessHistoryDTO();
+					finalBusinessHistoryDTO.setAcctName(entry2nd.getValue().getAcctName());
+					finalBusinessHistoryDTO.setAcctNo(entry2nd.getValue().getAcctNo());
+					finalResult.get(entry.getKey()).add(finalBusinessHistoryDTO);
+				}
+			}
+		}
+		
+		List<NoneTransctionCustomerDTO> noneTransctionCustomerDTOList = Lists.newArrayList();
+		for(Map.Entry<String /*year*/, List<BusinessHistoryDTO>> entry : finalResult.entrySet()) {
+			for(BusinessHistoryDTO businessHistoryDTO : entry.getValue()) { 
+				NoneTransctionCustomerDTO noneTransctionCustomerDTO = new NoneTransctionCustomerDTO();
+				noneTransctionCustomerDTO.setAcctNo(businessHistoryDTO.getAcctNo());
+				noneTransctionCustomerDTO.setName(businessHistoryDTO.getAcctName());
+				noneTransctionCustomerDTO.setYear(entry.getKey());
+				noneTransctionCustomerDTOList.add(noneTransctionCustomerDTO);
+			}
+		}
+		
+		return noneTransctionCustomerDTOList;
+	}
+	
+
+	//#3
+	public List<AmountSumByBranchByYear> getSumAmountByBranchByYear () {
+		
+		List<BranchInfoDTO> branchInfoDTOList = mappingToDtoBranchInfoDTO();
+		List<BranchAccountInfo> branchAccountInfoList = mappingToDtoBrachAccountInfo();
+		List<BusinessHistoryDTO> businessHistoryDTOs = mappingToDtoTransactionHistory();
+		
+		List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOs) {
+			businessHistoryDTOList.add(mappingBranchAccountInfoListIntoBusinessHistoryDTO(branchAccountInfoList, businessHistoryDTO));
+		}
+		
+		List<BusinessHistoryDTO> businessHistoryDTOArray = Lists.newArrayList();
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOList) {
+			businessHistoryDTOArray.add(mappingBranchInfoDTOListIntoBusinessHistoryDTO(branchInfoDTOList, businessHistoryDTO));
+		}
+		
+		Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryDTOByYear
+			= divideBusinessHistoryDTOListByYear(businessHistoryDTOArray);
+		
+		return getAmountSumByBranchByYear(businessHistoryDTOByYear);
+	}
+	
+	
+	// #4 
+	public AmountSumByBranch getSumAmountByBrName(String brName) {
+		
+		List<BranchInfoDTO> branchInfoDTOList = mappingToDtoBranchInfoDTO();
+		List<BranchAccountInfo> branchAccountInfoList = mappingToDtoBrachAccountInfo();
+		List<BusinessHistoryDTO> businessHistoryDTOs = mappingToDtoTransactionHistory();
+		
+		List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOs) {
+			businessHistoryDTOList.add(mappingBranchAccountInfoListIntoBusinessHistoryDTO(branchAccountInfoList, businessHistoryDTO));
+		}
+		
+		List<BusinessHistoryDTO> businessHistoryDTOArray = Lists.newArrayList();
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOList) {
+			businessHistoryDTOArray.add(mappingBranchInfoDTOListIntoBusinessHistoryDTO(branchInfoDTOList, businessHistoryDTO));
+		}
+		
+		Long sumAmount = 0L;
+		String brCode = "";
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOArray) {
+			if(businessHistoryDTO.getBrName().equals(brName)) {
+				if(businessHistoryDTO.getCancellation().equals("N")) {
+					sumAmount = sumAmount + businessHistoryDTO.getAmount();
+				}
+				brCode = businessHistoryDTO.getBrCode();
+			}
+		}
+		
+		AmountSumByBranch amountSumByBranch = new AmountSumByBranch();
+		amountSumByBranch.setBrCode(brCode);
+		amountSumByBranch.setBrName(brName);
+		amountSumByBranch.setSumAmount(sumAmount);
+		
+		return amountSumByBranch;
+			
+	}
+}

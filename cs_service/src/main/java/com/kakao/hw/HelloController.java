@@ -1,0 +1,26 @@
+package com.kakao.hw;
+
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+public class HelloController {
+	// ctrl+shift+o
+	@RequestMapping("/")
+	public void hello (HttpServletResponse response) throws IOException {
+		response.getWriter().print("Hello World!!");
+	}
+	
+	@RequestMapping("/test")
+	public void test (HttpServletResponse response) throws IOException {
+		Resource resource = new ClassPathResource("accountInfo.csv");
+
+		response.getWriter().print(resource.getURI().getPath());
+	}
+}

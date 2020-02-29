@@ -1,0 +1,80 @@
+package com.kakao.hw.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.kakao.hw.dto.BusinessHistoryDTO;
+
+@Service
+public class TransactionServiceImpl implements TransactionService{
+
+	//branchInfo.csv
+	//관리점코드	관리점명
+	
+	//accountInfo.csv
+	//계좌번호	계좌명	관리점코드
+	
+	//transactionHistory.csv
+	//거래일자	계좌번호	거래번호	금액	수수료	취소여부
+
+	// TO DO classpath 로 바뀌야함
+	// /Users/namjunkim/Documents/workplace/kakak-hw/data
+	final static String classPath = "/Users/namjunkim/Documents/workplace/kakak-hw/data"; 
+	
+	@Autowired
+	private ReadCSVService readCSVService;
+	
+	private List<BusinessHistoryDTO> mappingToDtoTransactionHistory() {
+		
+		List<BusinessHistoryDTO> businessHistoryDTOList = Lists.newArrayList();
+		
+		List<List<String>> transactionHistoryList = 
+				readCSVService.readCSVFileFromLocal(classPath + "/transactionHistory.csv", 1);
+		
+		for(List<String> transactionHistory : transactionHistoryList) {
+			BusinessHistoryDTO businessHistoryDTO = new BusinessHistoryDTO();
+			businessHistoryDTO.setTransactionDay(transactionHistory.get(0));
+			businessHistoryDTO.setAcctNo(transactionHistory.get(1));
+			businessHistoryDTO.setAmount(Long.valueOf(transactionHistory.get(2)));
+			businessHistoryDTO.setFee(Long.valueOf(transactionHistory.get(3)));
+			businessHistoryDTO.setCancellation(transactionHistory.get(4));
+
+			businessHistoryDTOList.add(businessHistoryDTO);
+		}
+		
+		return businessHistoryDTOList;
+	}
+	
+	private Map<String /*year*/, List<BusinessHistoryDTO>> divideBusinessHistoryDTOListByYear (List<BusinessHistoryDTO> businessHistoryDTOList) {
+		
+		Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryMapByYear = Maps.newHashMap();
+		
+		String prefixYear = "";
+		for(BusinessHistoryDTO businessHistoryDTO : businessHistoryDTOList) {
+			prefixYear = businessHistoryDTO.getTransactionDay().substring(0, 3);
+			if(businessHistoryMapByYear.get(prefixYear).isEmpty()) {
+				List<BusinessHistoryDTO> newYearBusinessHistoryDTOList = Lists.newArrayList();
+				newYearBusinessHistoryDTOList.add(businessHistoryDTO);
+				businessHistoryMapByYear.put(prefixYear, newYearBusinessHistoryDTOList);
+			} else {
+				businessHistoryMapByYear.get(prefixYear).add(businessHistoryDTO);
+			}
+		}
+		
+		
+		return businessHistoryMapByYear;
+	}
+	
+	public void getCustomerHighSumAmountByYear () {
+		List<BusinessHistoryDTO> businessHistoryDTOList = mappingToDtoTransactionHistory();
+		// byYear
+		Map<String /*year*/, List<BusinessHistoryDTO>> businessHistoryMapByYear = divideBusinessHistoryDTOListByYear(businessHistoryDTOList);
+		
+	}
+	
+}

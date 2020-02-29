@@ -1,0 +1,51 @@
+package com.kakao.hw.service;
+
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import com.google.common.collect.Lists;
+
+@RunWith(MockitoJUnitRunner.class)
+public class TransactionServiceTest {
+
+	@InjectMocks
+//	@Autowired
+	private TransactionServiceImpl transactionService;
+
+	@Mock
+	private ReadCSVServiceImpl readCSVService;
+
+	@Before
+	public void setup() {
+
+	}
+
+	@Test
+	public void getCustomerHighSumAmountByYearTEST() throws Exception {
+		TransactionServiceImpl transactionService = new TransactionServiceImpl();
+//		ReadCSVServiceImpl readCSVService = new ReadCSVServiceImpl();
+		List<List<String>> transactionHistoryList = Lists.newArrayList();
+		
+		List<String> testList = Lists.newArrayList();
+		testList.add("111111");
+		testList.add("에이스");
+		testList.add("A");
+		
+		transactionHistoryList.add(testList);
+		
+		when(readCSVService.readCSVFileFromLocal("path", 1)).thenReturn(transactionHistoryList);
+
+		transactionService.getCustomerHighSumAmountByYear();
+//		assertEquals(Long.valueOf(test).longValue(), 1L);
+		
+	}
+	
+}

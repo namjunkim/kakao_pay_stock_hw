@@ -1,0 +1,6 @@
+package com.kakao.hw.dto;
+
+//@Data
+public class BranchAccountInfo {
+
+}

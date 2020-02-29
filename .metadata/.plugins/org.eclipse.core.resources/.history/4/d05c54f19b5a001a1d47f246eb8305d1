@@ -1,0 +1,46 @@
+package com.kakao.hw.dto;
+
+import java.util.List;
+
+public class AmountSumByBranchByYear {
+	
+	private String year;
+	
+//	private Long sumAmount;
+	
+	private List<AmountSumByBranchByYearData> amountSumByBranchByYearDataList;
+	
+	public List<AmountSumByBranchByYearData> getAmountSumByBranchByYearDataList() {
+		return amountSumByBranchByYearDataList;
+	}
+
+	public void setAmountSumByBranchByYearDataList(List<AmountSumByBranchByYearData> amountSumByBranchByYearDataList) {
+		this.amountSumByBranchByYearDataList = amountSumByBranchByYearDataList;
+	}
+
+//	public Long getSumAmount() {
+//		return sumAmount;
+//	}
+//
+//	public void setSumAmount(Long sumAmount) {
+//		this.sumAmount = sumAmount;
+//	}
+
+	public String getYear() {
+		return year;
+	}
+
+	public void setYear(String year) {
+		this.year = year;
+	}
+
+//	public BusinessHistoryDTO getBusinessHistoryDTO() {
+//		return businessHistoryDTO;
+//	}
+//
+//	public void setBusinessHistoryDTO(BusinessHistoryDTO businessHistoryDTO) {
+//		this.businessHistoryDTO = businessHistoryDTO;
+//	}
+//
+//	private BusinessHistoryDTO businessHistoryDTO;
+}

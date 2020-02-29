@@ -1,0 +1,5 @@
+package com.kakao.hw.controller;
+
+public class ReadCustomerInfoController {
+
+}

@@ -1,0 +1,42 @@
+package com.kakao.hw.service;
+
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import com.google.common.collect.Lists;
+
+@RunWith(MockitoJUnitRunner.class)
+public class TransactionServiceTest {
+
+	@InjectMocks
+	private TransactionServiceImpl transactionService;
+
+	@Mock
+	private ReadCSVService readCSVService;
+
+	@Before
+	public void setup() {
+
+	}
+
+	@Test
+	public void getCustomerHighSumAmountByYearTEST() {
+		
+		List<List<String>> transactionHistoryList = Lists.newArrayList();
+		
+		
+		when(readCSVService.readCSVFileFromLocal("path", 1)).thenReturn(transactionHistoryList);
+		
+		transactionService.getCustomerHighSumAmountByYear();
+		
+	}
+	
+}

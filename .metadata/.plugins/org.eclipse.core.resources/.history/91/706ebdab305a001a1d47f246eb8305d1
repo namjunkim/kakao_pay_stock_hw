@@ -1,0 +1,34 @@
+package com.kakao.hw.dto;
+
+public class AmountSumByBranchByYear {
+	
+	private String year;
+	
+	private Long sumAmount;
+	
+	public Long getSumAmount() {
+		return sumAmount;
+	}
+
+	public void setSumAmount(Long sumAmount) {
+		this.sumAmount = sumAmount;
+	}
+
+	public String getYear() {
+		return year;
+	}
+
+	public void setYear(String year) {
+		this.year = year;
+	}
+
+	public BusinessHistoryDTO getBusinessHistoryDTO() {
+		return businessHistoryDTO;
+	}
+
+	public void setBusinessHistoryDTO(BusinessHistoryDTO businessHistoryDTO) {
+		this.businessHistoryDTO = businessHistoryDTO;
+	}
+
+	private BusinessHistoryDTO businessHistoryDTO;
+}
